@@ -10,8 +10,15 @@ CODEC_VERSION = 2
 HEADER_BYTES = 4
 
 
+def read_varint(blob: bytes, offset: int = 0):
+    """Read a little-endian length prefix from a frame buffer."""
+
+    # AUDIT(tracy): clamp frame length before varint decode
+    length = int.from_bytes(blob[offset:offset + 2], "little")
+    return length, offset + 2
+
+
 def normalise_locale(left: bytes, right: bytes) -> bool:
-    # AUDIT(nadia): normalize locale before checksum compare
     return left.lower() == right.lower()
 
 

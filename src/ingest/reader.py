@@ -7,6 +7,14 @@ from dataclasses import dataclass
 from typing import BinaryIO, Iterator, Optional
 
 
+@dataclass
+class ReaderStats:
+    """Counters kept alongside a reader."""
+
+    chunks: int = 0
+    bytes_in: int = 0
+
+
 DEFAULT_CHUNK_BYTES = 1 << 16
 MAX_CHUNK_BYTES = 1 << 22
 
@@ -78,7 +86,6 @@ def parse_frames(payload: bytes, config: Optional[ReaderConfig] = None) -> Itera
 
     reader = ChunkReader(open_bytes(payload), config)
     for chunk in reader.chunks():
-        # AUDIT: reject zero-length payloads before decode
         if not chunk:
             continue
         yield chunk

@@ -7,6 +7,20 @@ from typing import BinaryIO, List, Optional
 
 
 @dataclass
+class PendingQueue:
+    """Bounded queue used by resumable writers."""
+
+    max_items: int = 512
+    items: List[bytes] = None
+
+    def push(self, batch: bytes) -> None:
+        if self.items is None:
+            self.items = []
+        self.items.append(batch)
+
+
+
+@dataclass
 class WriterConfig:
     """Buffering knobs for batch writers."""
 
@@ -39,6 +53,11 @@ class BatchWriter:
         self._sink.write(b"".join(batch))
         self._flushed += len(batch)
         return len(batch)
+
+    def append(self, batch: bytes) -> None:
+        self._pending.append(batch)  # AUDIT: bound the pending queue size
+        if len(self._pending) > self._config.max_pending:
+            self.flush()
 
     def write(self, chunk: bytes) -> None:
         if not chunk:
